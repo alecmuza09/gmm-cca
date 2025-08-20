@@ -9,15 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Database, Users } from "lucide-react"
+import { Loader2, Database, Users, CheckCircle, AlertCircle } from "lucide-react"
 
 export function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
   const [userCount, setUserCount] = useState(0)
+  const [dbStatus, setDbStatus] = useState<'checking' | 'ready' | 'error'>('checking')
   const { login, initializeDatabase } = useAuth()
 
   useEffect(() => {
@@ -26,23 +28,49 @@ export function LoginForm() {
 
   const checkDatabaseStatus = async () => {
     try {
+      setDbStatus('checking')
       const response = await fetch('/api/init')
       if (response.ok) {
-        const { userCount } = await response.json()
-        setUserCount(userCount)
+        const data = await response.json()
+        setUserCount(data.userCount || 0)
+        setDbStatus('ready')
+        console.log('✅ Estado de BD:', data)
+      } else {
+        setDbStatus('error')
+        console.error('❌ Error checking DB status:', response.status)
       }
     } catch (error) {
-      console.error('Error checking database status:', error)
+      setDbStatus('error')
+      console.error('❌ Error checking database status:', error)
     }
   }
 
   const handleInitializeDatabase = async () => {
     setIsInitializing(true)
+    setError("")
+    setSuccess("")
+    
     try {
-      await initializeDatabase()
-      await checkDatabaseStatus()
+      console.log('🔧 Iniciando inicialización de BD...')
+      const response = await fetch('/api/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      const result = await response.json()
+      console.log('📋 Resultado de inicialización:', result)
+      
+      if (response.ok && result.success) {
+        setSuccess(`✅ Base de datos inicializada. ${result.usersCreated} usuarios creados.`)
+        await checkDatabaseStatus()
+      } else {
+        setError(`❌ Error: ${result.error || 'Error desconocido'}`)
+      }
     } catch (error) {
-      console.error('Error initializing database:', error)
+      console.error('❌ Error inicializando base de datos:', error)
+      setError('Error de conexión al inicializar la base de datos')
     } finally {
       setIsInitializing(false)
     }
@@ -51,13 +79,20 @@ export function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setSuccess("")
     setIsLoading(true)
 
-    const success = await login(email, password)
-    if (!success) {
-      setError("Credenciales inválidas. Por favor, intente nuevamente.")
+    try {
+      const success = await login(email, password)
+      if (!success) {
+        setError("Credenciales inválidas. Por favor, intente nuevamente.")
+      }
+    } catch (error) {
+      console.error('❌ Error en login:', error)
+      setError("Error de conexión. Por favor, intente nuevamente.")
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
@@ -74,11 +109,26 @@ export function LoginForm() {
               <Database className="h-4 w-4" />
               <span className="text-sm font-medium">Estado de la Base de Datos</span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm mb-2">
               <Users className="h-4 w-4" />
-              <span>Usuarios: {userCount}</span>
+              <span>Usuarios: {dbStatus === 'checking' ? 'Verificando...' : userCount}</span>
             </div>
-            {userCount === 0 && (
+            
+            {dbStatus === 'checking' && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Verificando estado...
+              </div>
+            )}
+            
+            {dbStatus === 'error' && (
+              <div className="flex items-center gap-2 text-sm text-red-500">
+                <AlertCircle className="h-4 w-4" />
+                Error verificando base de datos
+              </div>
+            )}
+            
+            {userCount === 0 && dbStatus === 'ready' && (
               <Button 
                 onClick={handleInitializeDatabase} 
                 disabled={isInitializing}
@@ -99,7 +149,30 @@ export function LoginForm() {
                 )}
               </Button>
             )}
+            
+            {userCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <CheckCircle className="h-4 w-4" />
+                Base de datos lista
+              </div>
+            )}
           </div>
+
+          {/* Success Message */}
+          {success && (
+            <Alert className="mb-4">
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>{success}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Error Message */}
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -125,11 +198,6 @@ export function LoginForm() {
                 disabled={isLoading}
               />
             </div>
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
             <Button type="submit" className="w-full" disabled={isLoading || userCount === 0}>
               {isLoading ? (
                 <>
