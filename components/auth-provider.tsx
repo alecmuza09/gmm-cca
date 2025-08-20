@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
+  initializeDatabase: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -31,12 +32,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [])
 
+  const initializeDatabase = async () => {
+    try {
+      console.log('🔧 Inicializando base de datos...')
+      const response = await fetch('/api/init', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        console.log('✅ Base de datos inicializada:', result)
+      } else {
+        console.error('❌ Error inicializando base de datos')
+      }
+    } catch (error) {
+      console.error('Error inicializando base de datos:', error)
+    }
+  }
+
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/me')
       if (response.ok) {
         const userData = await response.json()
         setUser(userData)
+      } else {
+        // Si no hay autenticación, verificar si hay usuarios en la base de datos
+        const initResponse = await fetch('/api/init')
+        if (initResponse.ok) {
+          const { userCount } = await initResponse.json()
+          if (userCount === 0) {
+            // No hay usuarios, inicializar la base de datos
+            await initializeDatabase()
+          }
+        }
       }
     } catch (error) {
       console.error('Auth check error:', error)
@@ -60,8 +92,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData)
         router.push('/')
         return true
+      } else {
+        // Si el login falla, verificar si hay usuarios
+        const initResponse = await fetch('/api/init')
+        if (initResponse.ok) {
+          const { userCount } = await initResponse.json()
+          if (userCount === 0) {
+            // No hay usuarios, inicializar y reintentar login
+            await initializeDatabase()
+            return await login(email, password)
+          }
+        }
+        return false
       }
-      return false
     } catch (error) {
       console.error('Login error:', error)
       return false
@@ -79,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, initializeDatabase }}>
       {children}
     </AuthContext.Provider>
   )
