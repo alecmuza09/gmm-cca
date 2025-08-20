@@ -18,6 +18,14 @@ const nextConfig = {
   // Configuración para páginas dinámicas
   experimental: {
     missingSuspenseWithCSRBailout: false,
+  },
+  
+  // Configuración de webpack para dependencias nativas
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('sqlite3')
+    }
+    return config
   }
 }
 

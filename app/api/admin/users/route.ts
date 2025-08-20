@@ -1,130 +1,98 @@
-import { NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import Database from 'better-sqlite3'
-import path from 'path'
-import { z } from 'zod'
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { cookies } from 'next/headers'
 
-const db = new Database(path.join(process.cwd(), 'dev.db'))
+async function validateAdminSession() {
+  const cookieStore = await cookies()
+  const sessionId = cookieStore.get('session')?.value
 
-// Schema de validación para crear usuarios
-const createUserSchema = z.object({
-  email: z.string().email("Email inválido"),
-  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-  role: z.enum(["ASESOR", "OPERACIONES", "MEDICO", "ADMIN"], {
-    errorMap: () => ({ message: "Rol inválido" })
-  }),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
-})
-
-// Función para verificar si el usuario es admin
-async function verifyAdminAccess(): Promise<{ isValid: boolean, userId?: string }> {
-  try {
-    const cookieStore = await cookies()
-    const sessionCookie = cookieStore.get("session")
-
-    if (!sessionCookie) {
-      return { isValid: false }
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-    const getUser = db.prepare('SELECT id, role FROM gmm_users WHERE id = ?')
-    const user = getUser.get(session.userId)
-
-    if (!user || user.role !== 'ADMIN') {
-      return { isValid: false }
-    }
-
-    return { isValid: true, userId: user.id }
-  } catch (error) {
+  if (!sessionId) {
     return { isValid: false }
   }
+
+  const user = await prisma.user.findUnique({
+    where: { email: sessionId }
+  })
+
+  if (!user || user.role !== 'ADMIN') {
+    return { isValid: false }
+  }
+
+  return { isValid: true, user }
 }
 
-// GET - Obtener todos los usuarios (solo para admins)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { isValid } = await verifyAdminAccess()
+    const { isValid } = await validateAdminSession()
     
     if (!isValid) {
-      return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const getUsers = db.prepare(`
-      SELECT id, email, name, role, created_at, updated_at 
-      FROM gmm_users 
-      ORDER BY created_at DESC
-    `)
-    const users = getUsers.all()
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
 
-    return NextResponse.json({ users })
+    return NextResponse.json(users)
+
   } catch (error) {
-    console.error("Error obteniendo usuarios:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    console.error('Error obteniendo usuarios:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
 
-// POST - Crear nuevo usuario (solo para admins)
 export async function POST(request: NextRequest) {
   try {
-    const { isValid } = await verifyAdminAccess()
+    const { isValid } = await validateAdminSession()
     
     if (!isValid) {
-      return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const validatedData = createUserSchema.parse(body)
+    const { email, password, name, role } = await request.json()
 
-    // Verificar si el email ya existe
-    const checkEmail = db.prepare('SELECT id FROM gmm_users WHERE email = ?')
-    const existingUser = checkEmail.get(validatedData.email)
-    
+    if (!email || !password || !role) {
+      return NextResponse.json({ error: 'Email, contraseña y rol son requeridos' }, { status: 400 })
+    }
+
+    // Verificar que el email no exista
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+
     if (existingUser) {
-      return NextResponse.json({ error: "El email ya está en uso" }, { status: 400 })
+      return NextResponse.json({ error: 'El email ya está registrado' }, { status: 400 })
     }
 
-    // Generar ID único
-    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Crear nuevo usuario
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password, // En producción, hashear la contraseña
+        name: name || '',
+        role
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    })
 
-    // Insertar nuevo usuario
-    const insertUser = db.prepare(`
-      INSERT INTO gmm_users (id, email, name, role, password_hash, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-    `)
-    
-    insertUser.run(
-      userId,
-      validatedData.email,
-      validatedData.name,
-      validatedData.role,
-      validatedData.password // En producción, esto debería ser hasheado
-    )
-
-    // Obtener el usuario creado (sin la contraseña)
-    const getUser = db.prepare(`
-      SELECT id, email, name, role, created_at, updated_at 
-      FROM gmm_users 
-      WHERE id = ?
-    `)
-    const newUser = getUser.get(userId)
-
-    return NextResponse.json({ 
-      message: "Usuario creado exitosamente",
-      user: newUser 
-    }, { status: 201 })
+    return NextResponse.json(newUser, { status: 201 })
 
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: "Datos inválidos",
-        details: error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message
-        }))
-      }, { status: 400 })
-    }
-
-    console.error("Error creando usuario:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    console.error('Error creando usuario:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }
