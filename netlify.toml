@@ -1,11 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "prisma db push && node scripts/init-db.js && npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
   DATABASE_URL = "file::memory:?connection_limit=1"
+  SECRETS_SCAN_ENABLED = "false"
 
 [[redirects]]
   from = "/*"
