@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      Role     @default(ASESOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  emisiones         Emision[] @relation("CreatedEmisiones")
+  responsableEn     Emision[] @relation("ResponsableEmisiones")
+
+  @@map("users")
+}
+
+enum Role {
+  ASESOR
+  OPERACIONES
+  MEDICO
+  ADMIN
+}
+
+model Emision {
+  id              String      @id @default(cuid())
+  folio           String      @unique
+  tipoEmision     TipoEmision
+  estado          Estado      @default(BORRADOR)
+  persona         Persona
+  requiereFactura Boolean     @default(false)
+  montoUSD        Float?
+  
+  // JSON fields for flexible data storage
+  solicitante     Json        // nombre, apellidos, fechaNac, RFC, CURP, domicilio...
+  moralInfo       Json?       // razonSocial, RFC, representante, codigoCliente
+  declaraciones   Json?       // actividades, riesgoSelecto, padecimientos
+  supuestosMeta   Json?       // flags de "viene de póliza individual/grupal", fechas vigencia, etc.
+  ocrFindings     Json?       // OCR results and extracted data
+  
+  escaladoA       Role?
+  responsableId   String?
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  responsable     User?       @relation("ResponsableEmisiones", fields: [responsableId], references: [id])
+  createdBy       User        @relation("CreatedEmisiones", fields: [createdById], references: [id])
+  faltantes       Faltante[]
+  documentos      Documento[]
+
+  @@map("emisiones")
+}
+
+enum TipoEmision {
+  NUEVO_NEGOCIO
+  ELIMINACION_PERIODOS
+  CONVERSION_INDIVIDUAL
+  CONEXION_GNP
+}
+
+enum Persona {
+  FISICA
+  MORAL
+}
+
+enum Estado {
+  BORRADOR
+  EN_REVISION_OCR
+  FALTANTES
+  ALTA_VIABLE
+  ESCALADO_OPERACIONES
+  ESCALADO_MEDICO
+  LISTO_PARA_PORTAL
+  CERRADO
+}
+
+model Documento {
+  id         String    @id @default(cuid())
+  emisionId  String
+  tipo       DocTipo
+  filename   String
+  url        String
+  mime       String
+  ocrStatus  OCRStatus @default(PENDING)
+  ocrData    Json?
+  uploadedAt DateTime  @default(now())
+
+  // Relations
+  emision    Emision   @relation(fields: [emisionId], references: [id], onDelete: Cascade)
+
+  @@map("documentos")
+}
+
+enum DocTipo {
+  SOLICITUD_GMM
+  CONSTANCIA_FISCAL
+  ID_OFICIAL
+  FORMATO_ALTA_CLIENTE
+  ACTA_CONSTITUTIVA
+  CERT_POLIZA
+  CARTA_ANTIGUEDAD
+  CARTA_BAJA_LABORAL
+  CARATULA_POLIZA
+  COMPROBANTE_PAGO
+  CUESTIONARIO_ACTIVIDAD
+  AMPLIACION_INFO_MEDICA
+  RIESGO_SELECTO
+  OTRO
+}
+
+enum OCRStatus {
+  PENDING
+  OK
+  INCOMPLETE
+  ILLEGIBLE
+}
+
+model Faltante {
+  id         String    @id @default(cuid())
+  emisionId  String
+  code       String    // ej. F_SIN_SOLICITUD, F_SIN_CONSTANCIA, etc.
+  message    String
+  resolved   Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  resolvedAt DateTime?
+
+  // Relations
+  emision    Emision   @relation(fields: [emisionId], references: [id], onDelete: Cascade)
+
+  @@map("faltantes")
+}
