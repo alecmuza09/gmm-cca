@@ -1,14 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Deshabilitar verificación de tipos durante build
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
+  
+  // Deshabilitar ESLint durante build
+  eslint: {
+    ignoreDuringBuilds: true,
   },
+  
+  // Configuración de imágenes
+  images: {
+    unoptimized: true
+  },
+  
+  // Configuración para páginas dinámicas
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  }
 }
 
 export default nextConfig

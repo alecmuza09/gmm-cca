@@ -155,13 +155,20 @@ gmm-cca/
 
 ## 🚀 Despliegue
 
-### Vercel (Recomendado)
+### Netlify (Recomendado)
+1. Conecta tu repositorio a Netlify
+2. Configura las variables de entorno en Netlify:
+   - `MISTRAL_API_KEY`
+   - `CONVERTAPI_SECRET`
+   - `DATABASE_URL`
+3. El despliegue se realizará automáticamente
+
+### Vercel
 1. Conecta tu repositorio a Vercel
 2. Configura las variables de entorno
 3. Despliega automáticamente
 
 ### Otros Proveedores
-- **Netlify**: Compatible con Next.js
 - **Railway**: Soporte para SQLite
 - **Heroku**: Requiere configuración adicional
 
