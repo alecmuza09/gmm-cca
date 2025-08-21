@@ -1,25 +1,30 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { useAuth } from "@/components/auth-provider"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Database, Users, CheckCircle, AlertCircle } from "lucide-react"
+import { useState, useEffect } from 'react'
+import { useAuth } from './auth-provider'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2, AlertCircle, CheckCircle, Database, Users } from 'lucide-react'
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [isInitializing, setIsInitializing] = useState(false)
-  const [userCount, setUserCount] = useState(0)
-  const [dbStatus, setDbStatus] = useState<'checking' | 'ready' | 'error'>('checking')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [dbStatus, setDbStatus] = useState<{
+    userCount: number
+    isLoading: boolean
+    error: string | null
+  }>({
+    userCount: 0,
+    isLoading: true,
+    error: null
+  })
+
   const { login, initializeDatabase } = useAuth()
 
   useEffect(() => {
@@ -28,210 +33,203 @@ export function LoginForm() {
 
   const checkDatabaseStatus = async () => {
     try {
-      setDbStatus('checking')
+      setDbStatus(prev => ({ ...prev, isLoading: true, error: null }))
       const response = await fetch('/api/init')
-      if (response.ok) {
-        const data = await response.json()
-        setUserCount(data.userCount || 0)
-        setDbStatus('ready')
-        console.log('✅ Estado de BD:', data)
+      const data = await response.json()
+      
+      if (data.success) {
+        setDbStatus({
+          userCount: data.userCount,
+          isLoading: false,
+          error: null
+        })
       } else {
-        setDbStatus('error')
-        console.error('❌ Error checking DB status:', response.status)
+        setDbStatus({
+          userCount: 0,
+          isLoading: false,
+          error: data.error || 'Error verificando base de datos'
+        })
       }
     } catch (error) {
-      setDbStatus('error')
-      console.error('❌ Error checking database status:', error)
+      setDbStatus({
+        userCount: 0,
+        isLoading: false,
+        error: 'No se puede conectar a la base de datos'
+      })
     }
   }
 
-  const handleInitializeDatabase = async () => {
-    setIsInitializing(true)
-    setError("")
-    setSuccess("")
-    
+  const handleCreateUsers = async () => {
     try {
-      console.log('🔧 Iniciando inicialización de BD...')
-      const response = await fetch('/api/init', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      setIsLoading(true)
+      setError('')
+      setSuccess('')
       
-      const result = await response.json()
-      console.log('📋 Resultado de inicialización:', result)
+      const result = await initializeDatabase()
       
-      if (response.ok && result.success) {
-        setSuccess(`✅ Base de datos inicializada. ${result.usersCreated} usuarios creados.`)
+      if (result.success) {
+        setSuccess('Usuarios creados exitosamente')
         await checkDatabaseStatus()
       } else {
-        setError(`❌ Error: ${result.error || 'Error desconocido'}`)
+        setError(result.error || 'Error creando usuarios')
       }
     } catch (error) {
-      console.error('❌ Error inicializando base de datos:', error)
-      setError('Error de conexión al inicializar la base de datos')
+      setError('Error inesperado creando usuarios')
     } finally {
-      setIsInitializing(false)
+      setIsLoading(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
     setIsLoading(true)
+    setError('')
+    setSuccess('')
 
     try {
-      const success = await login(email, password)
-      if (!success) {
-        setError("Credenciales inválidas. Por favor, intente nuevamente.")
+      const result = await login(email, password)
+      
+      if (result.success) {
+        setSuccess('Inicio de sesión exitoso')
+        // El AuthProvider manejará la redirección
+      } else {
+        setError(result.error || 'Credenciales inválidas')
       }
     } catch (error) {
-      console.error('❌ Error en login:', error)
-      setError("Error de conexión. Por favor, intente nuevamente.")
+      setError('Error de conexión. Verifica tu conexión a internet.')
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">GMM - Consolidacapital</CardTitle>
-          <CardDescription className="text-center">Ingrese sus credenciales para acceder al sistema</CardDescription>
+          <CardTitle className="text-2xl font-bold text-center">
+            GMM Web App
+          </CardTitle>
+          <CardDescription className="text-center">
+            Inicia sesión en tu cuenta
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          {/* Database Status */}
-          <div className="mb-4 p-3 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
+        
+        <CardContent className="space-y-4">
+          {/* Estado de la Base de Datos */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
               <Database className="h-4 w-4" />
-              <span className="text-sm font-medium">Estado de la Base de Datos</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm mb-2">
-              <Users className="h-4 w-4" />
-              <span>Usuarios: {dbStatus === 'checking' ? 'Verificando...' : userCount}</span>
+              <span>Estado de la Base de Datos:</span>
             </div>
             
-            {dbStatus === 'checking' && (
+            {dbStatus.isLoading ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Verificando estado...
+                Verificando conexión...
               </div>
-            )}
-            
-            {dbStatus === 'error' && (
-              <div className="flex items-center gap-2 text-sm text-red-500">
+            ) : dbStatus.error ? (
+              <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                Error verificando base de datos
-              </div>
-            )}
-            
-            {userCount === 0 && dbStatus === 'ready' && (
-              <Button 
-                onClick={handleInitializeDatabase} 
-                disabled={isInitializing}
-                size="sm" 
-                className="mt-2"
-                variant="outline"
-              >
-                {isInitializing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Inicializando...
-                  </>
-                ) : (
-                  <>
-                    <Database className="mr-2 h-4 w-4" />
-                    Crear Usuarios por Defecto
-                  </>
-                )}
-              </Button>
-            )}
-            
-            {userCount > 0 && (
+                <AlertDescription>
+                  {dbStatus.error}
+                </AlertDescription>
+              </Alert>
+            ) : (
               <div className="flex items-center gap-2 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
-                Base de datos lista
+                <span>Conectado ({dbStatus.userCount} usuarios)</span>
               </div>
             )}
           </div>
 
-          {/* Success Message */}
-          {success && (
-            <Alert className="mb-4">
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>{success}</AlertDescription>
+          {/* Crear Usuarios si no existen */}
+          {!dbStatus.isLoading && dbStatus.userCount === 0 && !dbStatus.error && (
+            <Alert>
+              <Users className="h-4 w-4" />
+              <AlertDescription>
+                No hay usuarios en la base de datos. 
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto font-normal"
+                  onClick={handleCreateUsers}
+                  disabled={isLoading}
+                >
+                  Crear usuarios por defecto
+                </Button>
+              </AlertDescription>
             </Alert>
           )}
 
-          {/* Error Message */}
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
+          {/* Formulario de Login */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="usuario@consolida.mx"
+                placeholder="admin@gmm.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
+                placeholder="admin123"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || userCount === 0}>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert>
+                <CheckCircle className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading || dbStatus.error !== null}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Iniciando sesión...
                 </>
               ) : (
-                "Iniciar Sesión"
+                'Iniciar Sesión'
               )}
             </Button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-sm font-medium mb-3">Credenciales disponibles:</p>
-            <div className="text-xs space-y-3">
-              <div>
-                <p><strong>Admin:</strong> admin@gmm.com / admin123</p>
-                <p className="text-muted-foreground ml-2">• Acceso completo al sistema</p>
-              </div>
-              <div>
-                <p><strong>Asesor:</strong> asesor@consolida.mx / asesor123</p>
-                <p className="text-muted-foreground ml-2">• Captura y gestiona emisiones propias</p>
-              </div>
-              <div>
-                <p><strong>Operaciones:</strong> operaciones@consolida.mx / operaciones123</p>
-                <p className="text-muted-foreground ml-2">• Revisa, valida y procesa todas las emisiones</p>
-              </div>
-              <div>
-                <p><strong>Médico:</strong> medico@consolida.mx / medico123</p>
-                <p className="text-muted-foreground ml-2">• Evalúa casos médicos escalados</p>
+          {/* Credenciales de Ejemplo */}
+          {!dbStatus.isLoading && dbStatus.userCount > 0 && (
+            <div className="mt-4 p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium mb-2">Credenciales de ejemplo:</p>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div>Admin: admin@gmm.com / admin123</div>
+                <div>Asesor: asesor@consolida.mx / asesor123</div>
+                <div>Operaciones: operaciones@consolida.mx / operaciones123</div>
+                <div>Médico: medico@consolida.mx / medico123</div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

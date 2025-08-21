@@ -1,32 +1,32 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Deshabilitar verificación de tipos durante build
+  output: 'standalone',
   typescript: {
     ignoreBuildErrors: true,
   },
-  
-  // Deshabilitar ESLint durante build
   eslint: {
     ignoreDuringBuilds: true,
   },
-  
-  // Configuración de imágenes
-  images: {
-    unoptimized: true
-  },
-  
-  // Configuración para páginas dinámicas
   experimental: {
     missingSuspenseWithCSRBailout: false,
   },
-  
-  // Configuración de webpack para dependencias nativas
+  images: {
+    unoptimized: true,
+  },
   webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.externals.push('sqlite3')
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
     }
-    return config
-  }
-}
+    return config;
+  },
+  // Configuración para evitar errores de hidratación
+  reactStrictMode: false,
+  swcMinify: true,
+};
 
-export default nextConfig
+export default nextConfig;
