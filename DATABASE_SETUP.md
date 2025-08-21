@@ -1,102 +1,94 @@
-# 🗄️ Configuración de Base de Datos MySQL
+# 🗄️ Configuración de Base de Datos MongoDB
 
-## 📋 Opciones de Base de Datos
+## ✅ **Base de Datos Configurada**
 
-### 1. **PlanetScale (Recomendado - Gratuito)**
-- Base de datos MySQL en la nube
-- Plan gratuito con 1GB de almacenamiento
-- Compatible con Netlify
-- Configuración automática
+Tu aplicación está configurada para usar **MongoDB Atlas** con la siguiente conexión:
 
-### 2. **Railway (Alternativa - Gratuito)**
-- Base de datos MySQL/PostgreSQL
-- Plan gratuito disponible
-- Fácil configuración
+```
+mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA
+```
 
-### 3. **Supabase (Alternativa - Gratuito)**
-- Base de datos PostgreSQL
-- Plan gratuito generoso
-- Interfaz web completa
+## 🚀 **Configuración en Netlify**
 
-## 🚀 Configuración con PlanetScale
+### Variables de Entorno Requeridas:
 
-### Paso 1: Crear cuenta en PlanetScale
-1. Ve a [planetscale.com](https://planetscale.com)
-2. Crea una cuenta gratuita
-3. Crea un nuevo proyecto
+En el dashboard de Netlify, configura estas variables:
 
-### Paso 2: Crear base de datos
-1. En tu proyecto, crea una nueva base de datos
-2. Selecciona la región más cercana
-3. Copia la URL de conexión
-
-### Paso 3: Configurar variables de entorno
-
-**En Netlify:**
 ```env
-DATABASE_URL=mysql://username:password@host:port/database
+DATABASE_URL=mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA
 MISTRAL_API_KEY=tu_api_key_de_mistral
 CONVERTAPI_SECRET=tu_secret_de_convertapi
 ```
 
-**Para desarrollo local (.env.local):**
+## 🔧 **Configuración Local**
+
+Para desarrollo local, crea un archivo `.env.local` en la raíz del proyecto:
+
 ```env
-DATABASE_URL=mysql://username:password@host:port/database
+DATABASE_URL="mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA"
 MISTRAL_API_KEY=tu_api_key_de_mistral
 CONVERTAPI_SECRET=tu_secret_de_convertapi
 ```
 
-### Paso 4: Ejecutar migraciones
+## 📋 **Pasos para Activar**
+
+### 1. Configurar Variables en Netlify
+1. Ve al dashboard de tu proyecto en Netlify
+2. Ve a **Site settings** > **Environment variables**
+3. Agrega las variables de entorno listadas arriba
+
+### 2. Ejecutar Migraciones (Opcional)
 ```bash
 # Generar cliente de Prisma
 npx prisma generate
 
-# Ejecutar migraciones
+# Ejecutar migraciones (MongoDB no requiere migraciones tradicionales)
 npx prisma db push
 
 # Verificar conexión
 npx prisma studio
 ```
 
-## 🔧 Configuración Manual
+### 3. Inicializar Usuarios
+Una vez desplegado, los usuarios se crearán automáticamente al acceder a la aplicación.
 
-### Si prefieres otra base de datos:
+## 🎯 **Ventajas de MongoDB**
 
-1. **Crear base de datos MySQL**
-2. **Configurar variables de entorno**
-3. **Ejecutar migraciones**
-4. **Inicializar usuarios por defecto**
+✅ **Flexible** - Esquema dinámico  
+✅ **Escalable** - Crece con tu aplicación  
+✅ **Confiable** - MongoDB Atlas es muy estable  
+✅ **Compatible** - Funciona perfectamente con Netlify  
+✅ **Gratuito** - Plan gratuito generoso  
 
-## 📝 Variables de Entorno Requeridas
+## 📝 **Credenciales por Defecto**
 
-```env
-# Base de datos MySQL
-DATABASE_URL=mysql://username:password@host:port/database
+Una vez configurada, podrás usar estas credenciales:
 
-# APIs externas
-MISTRAL_API_KEY=tu_api_key_de_mistral
-CONVERTAPI_SECRET=tu_secret_de_convertapi
-```
+| Usuario | Email | Contraseña | Rol |
+|---------|-------|------------|-----|
+| **Admin** | admin@gmm.com | admin123 | ADMIN |
+| **Asesor** | asesor@consolida.mx | asesor123 | ASESOR |
+| **Operaciones** | operaciones@consolida.mx | operaciones123 | OPERACIONES |
+| **Médico** | medico@consolida.mx | medico123 | MEDICO |
 
-## 🎯 Pasos para Configurar
-
-1. **Elige una base de datos** (PlanetScale recomendado)
-2. **Crea la base de datos** y obtén la URL de conexión
-3. **Configura las variables de entorno** en Netlify
-4. **Ejecuta las migraciones** para crear las tablas
-5. **Inicializa los usuarios** por defecto
-
-## ✅ Verificación
+## ✅ **Verificación**
 
 Una vez configurada:
 - Los usuarios se crearán automáticamente
-- Podrás hacer login con las credenciales por defecto
+- Podrás hacer login sin problemas
 - Los datos persistirán entre deploys
+- La aplicación será completamente funcional
 
-## 🆘 Soporte
+## 🆘 **Soporte**
 
 Si tienes problemas:
-1. Verifica la URL de conexión
-2. Asegúrate de que las variables estén configuradas
+1. Verifica que las variables estén configuradas en Netlify
+2. Asegúrate de que la URL de MongoDB sea correcta
 3. Revisa los logs de Netlify
-4. Ejecuta las migraciones manualmente si es necesario
+4. Verifica la conexión a MongoDB Atlas
+
+## 🔐 **Seguridad**
+
+- La contraseña de MongoDB está incluida en la URL
+- Para mayor seguridad, considera usar variables de entorno separadas
+- MongoDB Atlas tiene seguridad integrada

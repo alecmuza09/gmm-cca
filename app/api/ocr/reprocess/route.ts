@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     // Verificar que el documento existe
     const documento = await prisma.documento.findUnique({
-      where: { id: parseInt(documentId) }
+      where: { id: documentId }
     })
 
     if (!documento) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     // En un sistema real, aquí se volvería a procesar el documento
     
     const updatedDocumento = await prisma.documento.update({
-      where: { id: parseInt(documentId) },
+      where: { id: documentId },
       data: {
         ocrStatus: 'PENDING',
         ocrData: null

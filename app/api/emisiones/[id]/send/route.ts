@@ -6,10 +6,10 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const emisionId = parseInt(params.id)
+    const emisionId = params.id
     
-    if (isNaN(emisionId)) {
-      return NextResponse.json({ error: 'ID de emisión inválido' }, { status: 400 })
+    if (!emisionId) {
+      return NextResponse.json({ error: 'ID de emisión requerido' }, { status: 400 })
     }
 
     // Verificar que la emisión existe
