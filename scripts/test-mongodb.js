@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client')
 
-// Configurar la URL de MongoDB
-process.env.DATABASE_URL = "mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA"
+// Configurar la URL de MongoDB con nombre de base de datos
+process.env.DATABASE_URL = "mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/gmm-cca?retryWrites=true&w=majority&appName=GMM-CCA"
 
 async function testMongoDB() {
   const prisma = new PrismaClient()

@@ -1,94 +1,99 @@
-# 🗄️ Configuración de Base de Datos MongoDB
+# 🗄️ Configuración de Base de Datos - MongoDB Atlas
 
-## ✅ **Base de Datos Configurada**
+## 📋 **Configuración Local**
 
-Tu aplicación está configurada para usar **MongoDB Atlas** con la siguiente conexión:
+### 1. **Crear archivo `.env.local`**
 
-```
-mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA
-```
-
-## 🚀 **Configuración en Netlify**
-
-### Variables de Entorno Requeridas:
-
-En el dashboard de Netlify, configura estas variables:
+Crea un archivo `.env.local` en la raíz del proyecto con el siguiente contenido:
 
 ```env
-DATABASE_URL=mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA
-MISTRAL_API_KEY=tu_api_key_de_mistral
-CONVERTAPI_SECRET=tu_secret_de_convertapi
+# MongoDB Atlas
+DATABASE_URL="mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/gmm-cca?retryWrites=true&w=majority&appName=GMM-CCA"
+
+# Mistral AI para OCR
+MISTRAL_API_KEY="tu_mistral_api_key_aqui"
+
+# ConvertAPI para conversión de PDF
+CONVERTAPI_SECRET="tu_convertapi_secret_aqui"
 ```
 
-## 🔧 **Configuración Local**
+### 2. **Instalar dependencias**
 
-Para desarrollo local, crea un archivo `.env.local` en la raíz del proyecto:
-
-```env
-DATABASE_URL="mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA"
-MISTRAL_API_KEY=tu_api_key_de_mistral
-CONVERTAPI_SECRET=tu_secret_de_convertapi
-```
-
-## 📋 **Pasos para Activar**
-
-### 1. Configurar Variables en Netlify
-1. Ve al dashboard de tu proyecto en Netlify
-2. Ve a **Site settings** > **Environment variables**
-3. Agrega las variables de entorno listadas arriba
-
-### 2. Ejecutar Migraciones (Opcional)
 ```bash
-# Generar cliente de Prisma
-npx prisma generate
-
-# Ejecutar migraciones (MongoDB no requiere migraciones tradicionales)
-npx prisma db push
-
-# Verificar conexión
-npx prisma studio
+npm install
 ```
 
-### 3. Inicializar Usuarios
-Una vez desplegado, los usuarios se crearán automáticamente al acceder a la aplicación.
+### 3. **Generar cliente Prisma**
 
-## 🎯 **Ventajas de MongoDB**
+```bash
+npx prisma generate
+```
 
-✅ **Flexible** - Esquema dinámico  
-✅ **Escalable** - Crece con tu aplicación  
-✅ **Confiable** - MongoDB Atlas es muy estable  
-✅ **Compatible** - Funciona perfectamente con Netlify  
-✅ **Gratuito** - Plan gratuito generoso  
+### 4. **Probar conexión**
 
-## 📝 **Credenciales por Defecto**
+```bash
+node scripts/test-mongodb.js
+```
 
-Una vez configurada, podrás usar estas credenciales:
+## 🌐 **Configuración en Netlify**
 
-| Usuario | Email | Contraseña | Rol |
-|---------|-------|------------|-----|
-| **Admin** | admin@gmm.com | admin123 | ADMIN |
-| **Asesor** | asesor@consolida.mx | asesor123 | ASESOR |
-| **Operaciones** | operaciones@consolida.mx | operaciones123 | OPERACIONES |
-| **Médico** | medico@consolida.mx | medico123 | MEDICO |
+### 1. **Variables de Entorno**
+
+Ve al dashboard de Netlify y configura las siguientes variables de entorno:
+
+| Variable | Valor |
+|----------|-------|
+| `DATABASE_URL` | `mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/gmm-cca?retryWrites=true&w=majority&appName=GMM-CCA` |
+| `MISTRAL_API_KEY` | Tu clave de API de Mistral |
+| `CONVERTAPI_SECRET` | Tu clave secreta de ConvertAPI |
+
+### 2. **Configuración de Red en MongoDB Atlas**
+
+1. Ve a [MongoDB Atlas Dashboard](https://cloud.mongodb.com)
+2. Selecciona tu cluster
+3. Ve a **Network Access**
+4. Haz clic en **+ ADD IP ADDRESS**
+5. Agrega `0.0.0.0/0` para permitir todas las IPs
+
+### 3. **Verificar Usuario de Base de Datos**
+
+1. Ve a **Database Access**
+2. Verifica que el usuario `alecmuza09` tenga permisos de lectura/escritura
+3. Si es necesario, genera una nueva contraseña
+
+## 🚀 **Despliegue**
+
+Una vez configuradas las variables de entorno en Netlify:
+
+1. **Netlify detectará automáticamente** los cambios en GitHub
+2. **Iniciará un nuevo despliegue**
+3. **Los usuarios se crearán automáticamente** en la primera ejecución
+
+## 👥 **Usuarios por Defecto**
+
+La aplicación creará automáticamente los siguientes usuarios:
+
+| Email | Contraseña | Rol |
+|-------|------------|-----|
+| `admin@gmm.com` | `admin123` | ADMIN |
+| `asesor@consolida.mx` | `asesor123` | ASESOR |
+| `operaciones@consolida.mx` | `operaciones123` | OPERACIONES |
+| `medico@consolida.mx` | `medico123` | MEDICO |
 
 ## ✅ **Verificación**
 
-Una vez configurada:
-- Los usuarios se crearán automáticamente
-- Podrás hacer login sin problemas
-- Los datos persistirán entre deploys
-- La aplicación será completamente funcional
+Para verificar que todo funciona:
 
-## 🆘 **Soporte**
+1. **Accede a tu aplicación** en Netlify
+2. **Inicia sesión** con cualquiera de los usuarios por defecto
+3. **Verifica que puedes navegar** por todas las secciones
+4. **Prueba la funcionalidad OCR** subiendo un documento
 
-Si tienes problemas:
-1. Verifica que las variables estén configuradas en Netlify
-2. Asegúrate de que la URL de MongoDB sea correcta
-3. Revisa los logs de Netlify
-4. Verifica la conexión a MongoDB Atlas
+## 🔧 **Solución de Problemas**
 
-## 🔐 **Seguridad**
+Si encuentras problemas:
 
-- La contraseña de MongoDB está incluida en la URL
-- Para mayor seguridad, considera usar variables de entorno separadas
-- MongoDB Atlas tiene seguridad integrada
+1. **Revisa los logs** de Netlify
+2. **Verifica las variables de entorno**
+3. **Consulta el archivo** `MONGODB_TROUBLESHOOTING.md`
+4. **Ejecuta el script de prueba** localmente: `node scripts/test-mongodb.js`

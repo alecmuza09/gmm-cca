@@ -63,7 +63,7 @@ node scripts/test-mongodb.js
 ### 2. **Verificar Variables de Entorno**
 En Netlify, asegúrate de que `DATABASE_URL` sea:
 ```
-mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/?retryWrites=true&w=majority&appName=GMM-CCA
+mongodb+srv://alecmuza09:s5sHo7g9fHvbDIZR@gmm-cca.0voskrv.mongodb.net/gmm-cca?retryWrites=true&w=majority&appName=GMM-CCA
 ```
 
 ### 3. **Probar Conexión Directa**
