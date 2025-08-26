@@ -310,28 +310,9 @@ export function DocumentManager({ emission, onUpdate }: DocumentManagerProps) {
                 .map((doc: any) => (
                   <div key={doc.id} className="border rounded-lg p-4">
                     <h4 className="font-medium mb-2">{doc.filename}</h4>
-                    
-                    {/* Mostrar reporte estructurado si está disponible */}
-                    {doc.ocrData.structuredReport && (
-                      <div className="mb-4">
-                        <h5 className="font-semibold text-sm mb-2 text-gray-900">📋 Reporte de Información Extraída</h5>
-                        <div className="bg-gray-50 rounded-lg p-3 max-h-64 overflow-y-auto">
-                          <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono leading-relaxed">
-                            {doc.ocrData.structuredReport}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Datos JSON completos (colapsados por defecto) */}
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
-                        Ver datos JSON completos
-                      </summary>
-                      <pre className="text-xs bg-muted p-2 rounded overflow-auto mt-2">
-                        {JSON.stringify(doc.ocrData, null, 2)}
-                      </pre>
-                    </details>
+                    <pre className="text-xs bg-muted p-2 rounded overflow-auto">
+                      {JSON.stringify(doc.ocrData, null, 2)}
+                    </pre>
                   </div>
                 ))}
             </div>

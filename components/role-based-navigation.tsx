@@ -78,9 +78,7 @@ const NAVIGATION_CONFIG: Record<string, NavigationItem> = {
     key: 'users',
     label: 'Usuarios',
     href: '/admin/usuarios',
-    icon: Users,
-    badge: 'Admin',
-    badgeVariant: 'outline'
+    icon: Users
   },
   reports: {
     key: 'reports',
@@ -97,10 +95,9 @@ const NAVIGATION_CONFIG: Record<string, NavigationItem> = {
 }
 
 export function RoleBasedNavigation() {
-  const { user, loading } = useAuth()
+  const { user } = useAuth()
   
-  // Evitar problemas de hidratación devolviendo null durante carga inicial
-  if (loading || !user?.role) return null
+  if (!user?.role) return null
 
   const userRole = user.role as UserRole
   const allowedItems = getNavigationItems(userRole)

@@ -50,7 +50,7 @@ interface Emision {
 }
 
 export default function EmisionesPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [emisiones, setEmisiones] = useState<Emision[]>([])
@@ -65,18 +65,6 @@ export default function EmisionesPage() {
 
   const userRole = user?.role as UserRole
   const filterParam = searchParams?.get('filter')
-
-  // Mostrar loading durante autenticación inicial para evitar hidratación
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>Cargando...</span>
-        </div>
-      </div>
-    )
-  }
 
   // Verificar permisos
   if (!canAccess(userRole, 'viewAllEmissions') && userRole !== 'ASESOR') {

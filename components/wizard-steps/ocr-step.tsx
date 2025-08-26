@@ -106,43 +106,6 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
     }
   }
 
-  // Función para adaptar datos de la nueva estructura a la anterior
-  const adaptOcrData = (newData: any) => {
-    // Si ya está en el formato anterior, devolverlo tal como está
-    if (newData.asegurado || newData.compania) {
-      return newData
-    }
-
-    // Adaptar desde la nueva estructura de páginas
-    const adapted: any = { ...newData }
-
-    // Extraer información del solicitante titular
-    if (newData.pagina1?.solicitante1Titular) {
-      const titular = newData.pagina1.solicitante1Titular
-      if (titular.nombres || titular.primerApellido) {
-        adapted.asegurado = `${titular.nombres || ''} ${titular.primerApellido || ''} ${titular.segundoApellido || ''}`.trim()
-      }
-      if (titular.rfc) adapted.rfc = titular.rfc
-      if (titular.curp) adapted.curp = titular.curp
-      if (titular.correoElectronico) adapted.email = titular.correoElectronico
-      if (titular.domicilioResidencia?.telefono) adapted.telefono = titular.domicilioResidencia.telefono
-      if (titular.domicilioResidencia?.codigoPostal) adapted.codigoPostal = titular.domicilioResidencia.codigoPostal
-      if (titular.domicilioResidencia?.municipioAlcaldia) adapted.ciudad = titular.domicilioResidencia.municipioAlcaldia
-      if (titular.domicilioResidencia?.entidadFederativa) adapted.estado = titular.domicilioResidencia.entidadFederativa
-    }
-
-    // Información de la póliza
-    if (newData.pagina4) {
-      if (newData.pagina4.sumaAsegurada) adapted.prima = newData.pagina4.sumaAsegurada
-      if (newData.pagina4.deducible) adapted.deducible = newData.pagina4.deducible
-    }
-
-    // Información general
-    adapted.compania = 'GNP' // Siempre es GNP para este tipo de solicitud
-
-    return adapted
-  }
-
   const processOcrFile = async (file: File) => {
     try {
       // Simulate upload progress
@@ -177,26 +140,20 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
       await new Promise(resolve => setTimeout(resolve, 500))
 
       if (result.success && result.extractedData) {
-        // Adaptar los datos al formato anterior para compatibilidad
-        const adaptedData = adaptOcrData(result.extractedData)
-        
-        // Update form data with extracted information (mantener datos originales + adaptados)
+        // Update form data with extracted information
         updateFormData({
           ocrData: {
             ...formData.ocrData,
             caratulaFile: file,
-            extractedData: {
-              ...result.extractedData, // Datos originales de la nueva estructura
-              ...adaptedData // Datos adaptados para compatibilidad
-            },
+            extractedData: result.extractedData,
             isProcessing: false,
             processingComplete: true
           }
         })
 
         // Auto-fill all available data
-        if (adaptedData.asegurado) {
-          const nameParts = adaptedData.asegurado.split(' ')
+        if (result.extractedData.asegurado) {
+          const nameParts = result.extractedData.asegurado.split(' ')
           const nombre = nameParts[0] || ''
           const apellidos = nameParts.slice(1).join(' ') || ''
           
@@ -206,14 +163,14 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
               ...formData.solicitante,
               nombre: nombre,
               apellidos: apellidos,
-              rfc: adaptedData.rfc || formData.solicitante.rfc,
-              telefono: adaptedData.telefono || formData.solicitante.telefono,
-              email: adaptedData.email || formData.solicitante.email,
+              rfc: result.extractedData.rfc || formData.solicitante.rfc,
+              telefono: result.extractedData.telefono || formData.solicitante.telefono,
+              email: result.extractedData.email || formData.solicitante.email,
               domicilio: {
                 ...formData.solicitante.domicilio,
-                cp: adaptedData.codigoPostal || formData.solicitante.domicilio?.cp,
-                ciudad: adaptedData.ciudad || formData.solicitante.domicilio?.ciudad,
-                estado: adaptedData.estado || formData.solicitante.domicilio?.estado,
+                cp: result.extractedData.codigoPostal || formData.solicitante.domicilio?.cp,
+                ciudad: result.extractedData.ciudad || formData.solicitante.domicilio?.ciudad,
+                estado: result.extractedData.estado || formData.solicitante.domicilio?.estado,
                 pais: 'México'
               }
             }
@@ -221,14 +178,14 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
         }
 
         // Auto-fill monto if extracted
-        if (adaptedData.prima && !formData.montoUSD) {
+        if (result.extractedData.prima && !formData.montoUSD) {
           updateFormData({
-            montoUSD: adaptedData.prima
+            montoUSD: result.extractedData.prima
           })
         }
 
         // Validate extracted data and show review
-        const missing = validateExtractedData(adaptedData)
+        const missing = validateExtractedData(result.extractedData)
         setMissingFields(missing)
         setShowReview(true)
         setUserConfirmed(false)
@@ -484,40 +441,19 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
                 )}
               </div>
 
-              {/* Mostrar reporte estructurado si está disponible */}
-              {extractedData.structuredReport && (
-                <div className="col-span-full">
-                  <div className="bg-white border rounded-lg p-4">
-                    <h4 className="font-semibold text-lg mb-3 text-gray-900">📋 Reporte de Información Extraída</h4>
-                    <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
-                        {extractedData.structuredReport}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {/* Información básica */}
-                {(extractedData.asegurado || extractedData.pagina1?.solicitante1Titular?.nombres) && (
+                {extractedData.asegurado && (
                   <div className="space-y-2">
                     <Label className="text-green-700">✓ Asegurado</Label>
-                    <Input 
-                      value={extractedData.asegurado || 
-                        (extractedData.pagina1?.solicitante1Titular ? 
-                          `${extractedData.pagina1.solicitante1Titular.nombres || ''} ${extractedData.pagina1.solicitante1Titular.primerApellido || ''} ${extractedData.pagina1.solicitante1Titular.segundoApellido || ''}`.trim() 
-                          : '')} 
-                      readOnly 
-                      className="bg-green-50 border-green-200" 
-                    />
+                    <Input value={extractedData.asegurado} readOnly className="bg-green-50 border-green-200" />
                   </div>
                 )}
                 
-                {(extractedData.compania || 'GNP') && (
+                {extractedData.compania && (
                   <div className="space-y-2">
                     <Label className="text-green-700">✓ Compañía</Label>
-                    <Input value={extractedData.compania || 'GNP'} readOnly className="bg-green-50 border-green-200" />
+                    <Input value={extractedData.compania} readOnly className="bg-green-50 border-green-200" />
                   </div>
                 )}
                 
@@ -529,14 +465,10 @@ export function OcrStep({ formData, updateFormData, onAutoAdvance }: OcrStepProp
                 )}
                 
                 {/* Documentos oficiales */}
-                {(extractedData.rfc || extractedData.pagina1?.solicitante1Titular?.rfc) && (
+                {extractedData.rfc && (
                   <div className="space-y-2">
                     <Label className="text-green-700">✓ RFC</Label>
-                    <Input 
-                      value={extractedData.rfc || extractedData.pagina1?.solicitante1Titular?.rfc} 
-                      readOnly 
-                      className="bg-green-50 border-green-200" 
-                    />
+                    <Input value={extractedData.rfc} readOnly className="bg-green-50 border-green-200" />
                   </div>
                 )}
                 

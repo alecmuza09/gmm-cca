@@ -155,7 +155,7 @@ export function ClassificationStep({ formData, updateFormData }: ClassificationS
             Información Financiera
           </CardTitle>
           <CardDescription>
-            Capture los datos financieros de la póliza manualmente
+            Capture los datos financieros de la póliza manualmente - Solo Prima Total
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -176,67 +176,24 @@ export function ClassificationStep({ formData, updateFormData }: ClassificationS
             </Select>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            {/* Suma Asegurada */}
-            <div className="space-y-2">
-              <Label htmlFor="sumaAsegurada" className="flex items-center gap-2">
-                <ShieldIcon className="h-4 w-4" />
-                Suma Asegurada *
-              </Label>
-              <Input
-                id="sumaAsegurada"
-                type="number"
-                placeholder="0"
-                value={formData.informacionFinanciera?.sumaAsegurada || ""}
-                onChange={(e) => handleFinancialInfoChange("sumaAsegurada", parseFloat(e.target.value) || 0)}
-                min="0"
-                step="1000"
-              />
-              <p className="text-xs text-muted-foreground">
-                En {formData.informacionFinanciera?.moneda || "MXN"}
-              </p>
-            </div>
-
-            {/* Coaseguro */}
-            <div className="space-y-2">
-              <Label htmlFor="coaseguro" className="flex items-center gap-2">
-                <PercentIcon className="h-4 w-4" />
-                Coaseguro *
-              </Label>
-              <Input
-                id="coaseguro"
-                type="number"
-                placeholder="10"
-                value={formData.informacionFinanciera?.coaseguro || ""}
-                onChange={(e) => handleFinancialInfoChange("coaseguro", parseFloat(e.target.value) || 0)}
-                min="0"
-                max="100"
-                step="1"
-              />
-              <p className="text-xs text-muted-foreground">
-                Porcentaje (%)
-              </p>
-            </div>
-
-            {/* Deducible */}
-            <div className="space-y-2">
-              <Label htmlFor="deducible" className="flex items-center gap-2">
-                <DollarSignIcon className="h-4 w-4" />
-                Deducible *
-              </Label>
-              <Input
-                id="deducible"
-                type="number"
-                placeholder="15000"
-                value={formData.informacionFinanciera?.deducible || ""}
-                onChange={(e) => handleFinancialInfoChange("deducible", parseFloat(e.target.value) || 0)}
-                min="0"
-                step="1000"
-              />
-              <p className="text-xs text-muted-foreground">
-                En {formData.informacionFinanciera?.moneda || "MXN"}
-              </p>
-            </div>
+          {/* Prima Total */}
+          <div className="space-y-2">
+            <Label htmlFor="primaTotal" className="flex items-center gap-2">
+              <DollarSignIcon className="h-4 w-4" />
+              Prima Total *
+            </Label>
+            <Input
+              id="primaTotal"
+              type="number"
+              placeholder="0"
+              value={formData.informacionFinanciera?.primaTotal || ""}
+              onChange={(e) => handleFinancialInfoChange("primaTotal", parseFloat(e.target.value) || 0)}
+              min="0"
+              step="100"
+            />
+            <p className="text-xs text-muted-foreground">
+              En {formData.informacionFinanciera?.moneda || "MXN"}
+            </p>
           </div>
         </CardContent>
       </Card>

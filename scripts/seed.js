@@ -64,22 +64,22 @@ async function main() {
         persona: 'FISICA',
         requiereFactura: true,
         montoUSD: 8500.00,
-        solicitante: {
+        solicitante: JSON.stringify({
           nombre: 'Juan',
           apellidos: 'Pérez García',
           fechaNac: '1985-03-15',
           rfc: 'PEGJ850315ABC',
           email: 'juan.perez@email.com',
           telefono: '5551234567'
-        },
-        declaraciones: {
+        }),
+        declaraciones: JSON.stringify({
           actividadesDeRiesgo: ['submarinismo'],
           riesgoSelecto: false,
           padecimientosDeclarados: 'Ninguno'
-        },
-        supuestosMeta: {
+        }),
+        supuestosMeta: JSON.stringify({
           requiereFactura: true
-        },
+        }),
         createdById: 'user_asesor'
       }
     }),
@@ -94,24 +94,24 @@ async function main() {
         persona: 'MORAL',
         requiereFactura: false,
         montoUSD: 12000.00,
-        solicitante: {
+        solicitante: JSON.stringify({
           razonSocial: 'Tecnología Avanzada SA',
           rfc: 'TAV850315XYZ',
           representante: 'María González'
-        },
-        moralInfo: {
+        }),
+        moralInfo: JSON.stringify({
           razonSocial: 'Tecnología Avanzada SA',
           rfc: 'TAV850315XYZ',
           codigoCliente: 'CLI001'
-        },
-        declaraciones: {
+        }),
+        declaraciones: JSON.stringify({
           actividadesDeRiesgo: [],
           riesgoSelecto: true
-        },
-        supuestosMeta: {
+        }),
+        supuestosMeta: JSON.stringify({
           vieneDe: 'GRUPAL',
           fechaFinVigencia: '2024-12-15'
-        },
+        }),
         escaladoA: 'OPERACIONES',
         responsableId: 'user_marlene',
         createdById: 'user_asesor'

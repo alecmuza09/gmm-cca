@@ -1,77 +1,46 @@
-'use client'
+"use client"
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import type React from "react"
+import { createContext, useContext, useEffect, useState } from "react"
+import type { Role } from "@prisma/client"
 
-// Definir tipos localmente
-export type Role = 'ASESOR' | 'OPERACIONES' | 'MEDICO' | 'ADMIN'
-
-export interface User {
-  id: number
+interface AuthUser {
+  id: string
   email: string
-  role: Role
   name?: string
+  role: Role
 }
 
 interface AuthContextType {
-  user: User | null
-  loading: boolean
+  user: AuthUser | null
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
-  initializeDatabase: () => Promise<void>
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
+    // Check for existing session
     checkAuth()
   }, [])
 
-  const initializeDatabase = async () => {
-    try {
-      console.log('🔧 Inicializando base de datos...')
-      const response = await fetch('/api/init', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        console.log('✅ Base de datos inicializada:', result)
-      } else {
-        console.error('❌ Error inicializando base de datos')
-      }
-    } catch (error) {
-      console.error('Error inicializando base de datos:', error)
-    }
-  }
-
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/auth/me')
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
-      } else {
-        // Si no hay autenticación, verificar si hay usuarios en la base de datos
-        const initResponse = await fetch('/api/init')
-        if (initResponse.ok) {
-          const { userCount } = await initResponse.json()
-          if (userCount === 0) {
-            // No hay usuarios, inicializar la base de datos
-            await initializeDatabase()
-          }
-        }
+      // Mock auth for development - replace with real auth logic
+      const mockUser = {
+        id: "user_admin",
+        email: "admin@consolida.mx",
+        name: "Admin Sistema",
+        role: "ADMIN" as Role,
       }
+      setUser(mockUser)
     } catch (error) {
-      console.error('Auth check error:', error)
+      console.error("Auth check failed:", error)
     } finally {
       setLoading(false)
     }
@@ -79,59 +48,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (response.ok) {
-        const userData = await response.json()
-        setUser(userData)
-        router.push('/')
-        return true
-      } else {
-        // Si el login falla, verificar si hay usuarios
-        const initResponse = await fetch('/api/init')
-        if (initResponse.ok) {
-          const { userCount } = await initResponse.json()
-          if (userCount === 0) {
-            // No hay usuarios, inicializar y reintentar login
-            await initializeDatabase()
-            return await login(email, password)
-          }
-        }
-        return false
+      // Mock login for development - replace with real auth logic
+      const mockUser = {
+        id: "user_admin",
+        email: "admin@consolida.mx",
+        name: "Admin Sistema",
+        role: "ADMIN" as Role,
       }
+      setUser(mockUser)
+      return true
     } catch (error) {
-      console.error('Login error:', error)
+      console.error("Login failed:", error)
       return false
     }
   }
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      // Mock logout for development - replace with real auth logic
       setUser(null)
-      router.push('/login')
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout failed:", error)
     }
   }
 
-  return (
-    <AuthContext.Provider value={{ user, loading, login, logout, initializeDatabase }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={{ user, login, logout, loading }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 }

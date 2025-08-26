@@ -46,7 +46,7 @@ interface Emision {
 }
 
 export default function MisEmisionesPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const [emisiones, setEmisiones] = useState<Emision[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,18 +57,6 @@ export default function MisEmisionesPage() {
   const [companiaFilter, setCompaniaFilter] = useState("TODAS")
 
   const userRole = user?.role as UserRole
-
-  // Mostrar loading durante autenticación inicial para evitar hidratación
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="flex items-center space-x-2">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <span>Cargando...</span>
-        </div>
-      </div>
-    )
-  }
 
   // Verificar permisos - solo asesores pueden ver esta página
   if (userRole !== 'ASESOR' && userRole !== 'ADMIN') {

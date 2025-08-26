@@ -24,9 +24,7 @@ export interface EmissionFormData {
   
   // Información financiera manual
   informacionFinanciera?: {
-    sumaAsegurada?: number
-    coaseguro?: number
-    deducible?: number
+    primaTotal?: number
     moneda?: "MXN" | "USD"
   }
 
@@ -163,7 +161,7 @@ export function EmissionWizard() {
         
         // Validar información financiera
         const finInfo = formData.informacionFinanciera
-        if (!finInfo?.sumaAsegurada || !finInfo?.coaseguro || !finInfo?.deducible || !finInfo?.moneda) return false
+        if (!finInfo?.primaTotal || !finInfo?.moneda) return false
         
         // Validación específica para Vínculo Mundial
         if (formData.tipoEmision === "VINCULO_MUNDIAL") {

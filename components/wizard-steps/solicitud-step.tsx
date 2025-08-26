@@ -104,11 +104,7 @@ export function SolicitudStep({ formData, updateFormData, onValidateAndContinue 
     })
 
     try {
-      console.log('Enviando archivo para procesamiento OCR:')
-      console.log('- Nombre:', hasFile.name)
-      console.log('- Tipo MIME:', hasFile.type)
-      console.log('- Tamaño:', hasFile.size, 'bytes')
-      console.log('- Tamaño en MB:', (hasFile.size / 1024 / 1024).toFixed(2), 'MB')
+      console.log('Enviando archivo para procesamiento OCR:', hasFile.name, hasFile.type, 'Tamaño:', hasFile.size)
 
       const formDataToSend = new FormData()
       formDataToSend.append('file', hasFile)
@@ -140,9 +136,7 @@ export function SolicitudStep({ formData, updateFormData, onValidateAndContinue 
       setUploadProgress(100)
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
-        console.error('Error del servidor OCR:', errorData)
-        throw new Error(`Error ${response.status}: ${errorData.error || 'Error desconocido'}`)
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()

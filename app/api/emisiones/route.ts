@@ -13,9 +13,6 @@ export async function GET() {
           where: { resolved: false },
           select: { id: true },
         },
-        _count: {
-          select: { faltantes: true },
-        },
       },
       orderBy: { updatedAt: "desc" },
     })

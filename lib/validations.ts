@@ -1,32 +1,4 @@
-import { z } from "zod"
-
-// Definir tipos como strings en lugar de enums de Prisma
-export type TipoEmision = 'NUEVO_NEGOCIO' | 'ELIMINACION_PERIODOS' | 'CONVERSION_INDIVIDUAL' | 'CONEXION_GNP'
-export type Persona = 'FISICA' | 'MORAL'
-export type DocTipo = 'SOLICITUD_GMM' | 'CONSTANCIA_FISCAL' | 'ID_OFICIAL' | 'FORMATO_ALTA_CLIENTE' | 'ACTA_CONSTITUTIVA' | 'CERT_POLIZA' | 'CARTA_ANTIGUEDAD' | 'CARTA_BAJA_LABORAL' | 'CARATULA_POLIZA' | 'COMPROBANTE_PAGO' | 'CUESTIONARIO_ACTIVIDAD' | 'AMPLIACION_INFO_MEDICA' | 'RIESGO_SELECTO' | 'OTRO'
-
-// Schemas de validación
-export const emisionSchema = z.object({
-  tipoEmision: z.enum(['NUEVO_NEGOCIO', 'ELIMINACION_PERIODOS', 'CONVERSION_INDIVIDUAL', 'CONEXION_GNP']),
-  persona: z.enum(['FISICA', 'MORAL']),
-  solicitante: z.string().min(1, "Datos del solicitante requeridos"),
-  moralInfo: z.string().optional(),
-  declaraciones: z.string().optional(),
-  supuestosMeta: z.string().optional(),
-})
-
-export const documentoSchema = z.object({
-  nombre: z.string().min(1, "Nombre del documento requerido"),
-  tipo: z.enum(['SOLICITUD_GMM', 'CONSTANCIA_FISCAL', 'ID_OFICIAL', 'FORMATO_ALTA_CLIENTE', 'ACTA_CONSTITUTIVA', 'CERT_POLIZA', 'CARTA_ANTIGUEDAD', 'CARTA_BAJA_LABORAL', 'CARATULA_POLIZA', 'COMPROBANTE_PAGO', 'CUESTIONARIO_ACTIVIDAD', 'AMPLIACION_INFO_MEDICA', 'RIESGO_SELECTO', 'OTRO']),
-  url: z.string().optional(),
-})
-
-export const userSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-  role: z.enum(['ASESOR', 'OPERACIONES', 'MEDICO', 'ADMIN']),
-  name: z.string().optional(),
-})
+import { type TipoEmision, type Persona, DocTipo } from "@prisma/client"
 
 export interface ValidationRule {
   code: string

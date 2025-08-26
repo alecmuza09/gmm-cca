@@ -1,64 +1,31 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { prisma } from './prisma'
+import type { Role } from "@prisma/client"
 
-export type Role = 'ASESOR' | 'OPERACIONES' | 'MEDICO' | 'ADMIN'
-
-export interface User {
-  id: number
+export interface AuthUser {
+  id: string
   email: string
-  role: Role
   name?: string
+  role: Role
 }
 
-export async function getUser(): Promise<User | null> {
-  const cookieStore = await cookies()
-  const sessionId = cookieStore.get('session')?.value
-
-  if (!sessionId) {
-    return null
-  }
-
-  try {
-    const user = await prisma.user.findFirst({
-      where: {
-        // Buscar por sessionId (implementar lógica de sesión)
-        email: sessionId // Temporal: usar email como sessionId
-      }
-    })
-
-    if (!user) {
-      return null
-    }
-
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role as Role,
-      name: user.name || undefined
-    }
-  } catch (error) {
-    console.error('Error getting user:', error)
-    return null
+// Mock auth for development - replace with real auth system
+export async function getCurrentUser(): Promise<AuthUser | null> {
+  // This would be replaced with actual auth logic (Clerk, NextAuth, etc.)
+  // For now, we'll return an admin user to test the user management functionality
+  return {
+    id: "user_admin",
+    email: "admin@consolida.mx",
+    name: "Admin Sistema",
+    role: "ADMIN",
   }
 }
 
-export async function requireAuth(): Promise<User> {
-  const user = await getUser()
-  
-  if (!user) {
-    redirect('/login')
+export function hasPermission(userRole: Role, requiredRole: Role): boolean {
+  const roleHierarchy = {
+    ASESOR: 1,
+    OPERACIONES: 2,
+    MEDICO: 2,
+    ADMIN: 3,
   }
-  
-  return user
-}
 
-export async function requireRole(requiredRole: Role): Promise<User> {
-  const user = await requireAuth()
-  
-  if (user.role !== requiredRole && user.role !== 'ADMIN') {
-    redirect('/unauthorized')
-  }
-  
-  return user
+  return roleHierarchy[userRole] >= roleHierarchy[requiredRole]
 }

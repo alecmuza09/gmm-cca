@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Database, Mail, MessageSquare, Cloud, Eye, Save, TestTube } from "lucide-react"
+import { Settings, Database, Mail, MessageSquare, Cloud, Eye, Save, TestTube, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { UserManagement } from "@/components/user-management"
 
 export default function ConfiguracionPage() {
   const { user } = useAuth()
@@ -53,7 +54,7 @@ export default function ConfiguracionPage() {
     },
   })
 
-  if (user?.rol !== "ADMIN") {
+  if (user?.role !== "ADMIN") {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -102,13 +103,18 @@ export default function ConfiguracionPage() {
         <h1 className="text-2xl font-bold">Configuración del Sistema</h1>
       </div>
 
-      <Tabs defaultValue="integrations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="users" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="users">Usuarios</TabsTrigger>
           <TabsTrigger value="integrations">Integraciones</TabsTrigger>
           <TabsTrigger value="notifications">Notificaciones</TabsTrigger>
           <TabsTrigger value="ocr">OCR</TabsTrigger>
           <TabsTrigger value="storage">Almacenamiento</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="users" className="space-y-6">
+          <UserManagement />
+        </TabsContent>
 
         <TabsContent value="integrations" className="space-y-6">
           <Card>
